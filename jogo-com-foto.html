@@ -1,0 +1,124 @@
+<html>
+	<body>
+		<script src="https://unpkg.com/kaboom/dist/kaboom.js"></script>
+		<script>
+				
+			kaboom({
+				background: [75,75,75],
+				width: 3000,
+				height: 1000
+			})
+			
+			var VELOCIDADE_CORRIDA = 500;
+			var FORCA_PULO = 1400;
+			var PEGOU_ROUPAS = false;
+			
+			loadSprite('imagem-caixa', 'https://i.imgur.com/7L2708i.png')		
+			loadSprite('imagem-grama', 'https://i.imgur.com/3ISaDOS.png')	
+			loadSprite('imagem-roupas', 'https://i.imgur.com/Qe3ODz1.png')
+			loadSprite('imagem-cachorro', 'https://i.imgur.com/9aPFVuL.png')
+			loadSprite('imagem-heroi', 'https://i.imgur.com/s0GCUlB.png', {
+				sliceX:16,
+				anims: {
+					"animacao-andando": {
+						from: 0,
+						to: 7,
+						speed: 5
+					},
+					"animacao-correndo": {
+						from: 8,
+						to:15,
+						speed: 10
+					}				
+				}		
+			})
+			
+			scene("cena-inicial", ()=> {
+			
+				const mapa = [
+				'                                           ',
+				'                     x                     ',
+				'                                           ',
+				'                                           ',
+				'                                     cc    ',
+				'                                     cc    ',
+				'                                     cc    ',
+				'            cc                       cc    ',
+				'            cc  d                    cc    ',
+				'gggggg    gggggggggggggggg      ggggggggggg']
+				
+				const configuracaoDoMapa = {
+					width: 100,
+					height: 100,
+					'g': ()=> [sprite('imagem-grama'), area(), solid()],
+					'c': ()=> [sprite('imagem-caixa'), area(), solid()],
+					'd': ()=> [sprite('imagem-cachorro'),'objeto-cachorro', area(), solid(), scale(0.5), pos(0,-200)],
+					'x': ()=> [sprite('imagem-roupas'), 'objeto-roupas', area(), solid()]			
+				}
+				
+				addLevel(mapa, configuracaoDoMapa)
+				
+				const heroi = add([
+					sprite("imagem-heroi"),
+					area(),
+					body(),
+					pos(0,0),
+					scale(3)			
+				])
+				
+				onKeyDown("left", ()=> {
+					heroi.move(-VELOCIDADE_CORRIDA, 0)
+					heroi.flipX(false)
+					
+					if(PEGOU_ROUPAS == false && heroi.curAnim() !== "animacao-andando"){
+						heroi.play("animacao-andando")
+					}
+					
+					if(PEGOU_ROUPAS == true && heroi.curAnim() !== "animacao-correndo"){
+						heroi.play("animacao-correndo")
+					}
+				})
+				
+				onKeyDown("right", ()=> {
+					heroi.move(VELOCIDADE_CORRIDA, 0)
+					heroi.flipX(true)
+					
+					if(PEGOU_ROUPAS == false && heroi.curAnim() !== "animacao-andando"){
+						heroi.play("animacao-andando")
+					}
+					
+					if(PEGOU_ROUPAS == true && heroi.curAnim() !== "animacao-correndo"){
+						heroi.play("animacao-correndo")
+					}				
+				})
+				
+				onKeyDown("space", ()=> {
+					if(heroi.isGrounded()){
+						heroi.jump(FORCA_PULO)
+					}				
+				})
+				
+				heroi.onUpdate(()=> {
+					camPos(heroi.pos.x + 1000, camPos().y)
+				})
+				
+				heroi.collides('objeto-cachorro', (objetoTocado)=> {
+					objetoTocado.pos.x = randi(0,5000)
+				})
+				
+				heroi.collides('objeto-roupas', (objetoTocado)=> {
+					objetoTocado.destroy()
+					PEGOU_ROUPAS = true
+					FORCA_PULO = 1200
+					VELOCIDADE_CORRIDA = 1000
+					
+					heroi.play("animacao-correndo")
+					
+				})
+			})
+			
+			go("cena-inicial")
+			
+		</script>
+	</body>
+</html>
